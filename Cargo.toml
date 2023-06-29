@@ -1,9 +1,11 @@
 [package]
 name = "serde_json_canonicalizer"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-license-file = "LICENSE"
+license = "MIT"
 description = "JSON Canonicalization Scheme (JCS - RFC 8785) implementation"
+repository = "https://github.com/evik42/serde-json-canonicalizer"
+documentation = "https:/docs.rs/serde_json_canonicalizer/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -16,3 +18,7 @@ serde_json = { version = "1.0", features = [ "float_roundtrip" ] }
 
 [dev-dependencies]
 test-case = "3.1.0"
+
+[badges]
+maintenance = { status = "actively-developed" }
+github = { repository = "evik42/serde-json-canonicalizer", workflow = "nightly" }

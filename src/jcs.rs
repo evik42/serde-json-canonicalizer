@@ -10,13 +10,24 @@ use serde_json::{
     ser::{CharEscape, Formatter, Serializer},
 };
 
-/// TODO
+/// Serialize the given data structure as a JCS byte vector.
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
 pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
     let mut buffer = Vec::with_capacity(1024);
     to_writer(value, &mut buffer).map(|_| buffer)
 }
 
-/// TODO
+/// Serialize the given data structure as JCS into the I/O stream.
+/// Serialization guarantees it only feeds valid UTF-8 sequences to the writer.
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
 pub fn to_writer<S: Serialize, W: io::Write>(value: &S, writer: &mut W) -> serde_json::Result<()> {
     value.serialize(&mut JcsSerializer::new(writer))
 }
