@@ -1,19 +1,17 @@
 use std::io;
 
 use serde::Serialize;
-use serde_json::ser::Formatter;
 use test_case::case;
 
-use serde_json_canonicalizer::*;
+use serde_json_canonicalizer::to_vec;
 
-fn formatter_to_string<'a, V: Serialize>(
-    value: V,
-    f: &dyn Fn(&mut JcsFormatter, &mut (dyn io::Write + 'a), V) -> io::Result<()>,
-) -> io::Result<String> {
-    let mut buffer = Vec::with_capacity(32);
-    f(&mut JcsFormatter::default(), &mut buffer, value)?;
-    String::from_utf8(buffer)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF8 sequence"))
+fn value_to_string<V: Serialize>(value: V) -> io::Result<String> {
+    let buffer = to_vec(&value)?;
+    String::from_utf8(buffer).map_err(|_| unreachable!())
+}
+
+fn value_to_string_no_err<V: Serialize>(value: V) -> String {
+    value_to_string(value).unwrap()
 }
 
 #[case(0x0000000000000000 => "0" ; "Zero")]
@@ -42,7 +40,7 @@ fn formatter_to_string<'a, V: Serialize>(
 #[case(0x43143ff3c1cb0959 => "1424953923781206.2" ; "round to even")]
 fn jcs_rfc_appendix_b(bits: u64) -> String {
     let number: f64 = f64::from_bits(bits);
-    String::from_utf8(to_vec(&number).unwrap()).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(f64::NAN ; "NaN")]
@@ -50,7 +48,7 @@ fn jcs_rfc_appendix_b(bits: u64) -> String {
 #[case(f64::NEG_INFINITY ; "-Infinity")]
 fn infinite_numbers(number: f64) {
     assert!(to_vec(&number).is_err());
-    assert!(formatter_to_string(number, &JcsFormatter::write_f64).is_err());
+    assert!(value_to_string(number).is_err());
 }
 
 #[case(u8::MAX as f64 => "255" ; "u8::MAX exact")]
@@ -75,40 +73,40 @@ fn infinite_numbers(number: f64) {
 #[case(1844674407370955200000u128 as f64 => "1.8446744073709552e+21" ; "v8 compat rounding 2")]
 #[case(184467440737095520000000u128 as f64 => "1.844674407370955e+23" ; "v8 compat rounding 3")]
 fn integers(number: f64) -> String {
-    String::from_utf8(to_vec(&number).unwrap()).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(u8::MAX => "255" ; "u8::MAX exact")]
 fn integers_u8(number: u8) -> String {
-    formatter_to_string(number, &JcsFormatter::write_u8).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(i8::MAX => "127" ; "i8::MAX exact")]
 #[case(i8::MIN => "-128" ; "i8::MIN exact")]
 fn integers_i8(number: i8) -> String {
-    formatter_to_string(number, &JcsFormatter::write_i8).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(u16::MAX => "65535" ; "u16::MAX exact")]
 fn integers_u16(number: u16) -> String {
-    formatter_to_string(number, &JcsFormatter::write_u16).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(i16::MAX => "32767" ; "i16::MAX exact")]
 #[case(i16::MIN => "-32768" ; "i16::MIN exact")]
 fn integers_i16(number: i16) -> String {
-    formatter_to_string(number, &JcsFormatter::write_i16).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(u32::MAX => "4294967295" ; "u32::MAX exact")]
 fn integers_u32(number: u32) -> String {
-    formatter_to_string(number, &JcsFormatter::write_u32).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(i32::MAX => "2147483647" ; "i32::MAX exact")]
 #[case(i32::MIN => "-2147483648" ; "i32::MIN exact")]
 fn integers_i32(number: i32) -> String {
-    formatter_to_string(number, &JcsFormatter::write_i32).unwrap()
+    value_to_string_no_err(number)
 }
 
 // The RFC states that "For maximum compliance with the ECMAScript "JSON"
@@ -119,33 +117,33 @@ fn integers_i32(number: i32) -> String {
 // as the most widely used javascript engine.
 #[case(u64::MAX => "18446744073709552000" ; "u64::MAX exact (v8 compat)")]
 fn integers_u64(number: u64) -> String {
-    formatter_to_string(number, &JcsFormatter::write_u64).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(i64::MAX => "9223372036854776000" ; "i64::MAX exact (v8 compat)")]
 #[case(i64::MIN => "-9223372036854776000" ; "i64::MIN exact (v8 compat)")]
 fn integers_i64(number: i64) -> String {
-    formatter_to_string(number, &JcsFormatter::write_i64).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(184467440737095520000u128 => "184467440737095500000" ; "v8 compat 1")]
 #[case(1844674407370955200000u128 => "1.8446744073709552e+21" ; "v8 compat 2")]
 #[case(184467440737095520000000u128 => "1.844674407370955e+23" ; "v8 compat 3")]
 fn integers_u128(number: u128) -> String {
-    formatter_to_string(number, &JcsFormatter::write_u128).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(-184467440737095520000i128 => "-184467440737095500000" ; "v8 compat 1")]
 #[case(-1844674407370955200000i128 => "-1.8446744073709552e+21" ; "v8 compat 2")]
 #[case(-184467440737095520000000i128 => "-1.844674407370955e+23" ; "v8 compat 3")]
 fn integers_i128(number: i128) -> String {
-    formatter_to_string(number, &JcsFormatter::write_i128).unwrap()
+    value_to_string_no_err(number)
 }
 
 #[case(0.0f64 => "0" ; "zero")]
 #[case(-0.0f64 => "0" ; "minus zero")]
 fn zeroes(number: f64) -> String {
-    formatter_to_string(number, &JcsFormatter::write_f64).unwrap()
+    value_to_string_no_err(number)
 }
 
 // This test is running on a generated file, the generator is copied from the reference implementation
@@ -167,16 +165,15 @@ fn generated_numbers() {
     let mut percent = 0;
     let mut stdout = stdout().lock();
     let mut buffer: Vec<u8> = Vec::with_capacity(32);
-    let mut formatter = JcsFormatter::default();
     for (idx, line) in reader.lines().enumerate() {
         let line = line.unwrap();
         let parts = line.split(',').collect::<Vec<_>>();
         assert_eq!(2, parts.len());
         let input = f64::from_bits(u64::from_str_radix(parts[0], 16).unwrap());
-        formatter.write_f64(&mut buffer, input).unwrap();
+        let output = to_vec(&input).unwrap();
         assert_eq!(
             parts[1].as_bytes(),
-            &buffer,
+            &output,
             "Testing input {} parsed into {}",
             parts[0],
             input
@@ -186,12 +183,12 @@ fn generated_numbers() {
             threshold += one_percent;
             percent += 1;
             if percent % 10 == 0 {
-                write!(stdout, "{percent}%").ok();
+                writeln!(stdout, "{percent}%").ok();
             } else {
-                stdout.write(b".").ok();
+                write!(stdout, ".").ok();
             }
             stdout.flush().ok();
         }
     }
-    stdout.write(b"\n").ok();
+    writeln!(stdout).ok();
 }

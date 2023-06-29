@@ -101,12 +101,6 @@ function next() {
     return f
 }
 
-function progress(percent) {
-
-}
-
-// TODO: Emit the file as GZIP compressed.
-// TODO: Fix a buffering issue where Node.js tries to buffer the entire output.
 if (fs.existsSync(outputFile)) {
 	console.log("File " + outputFile + " already exists.")
 	process.exit(1)
@@ -131,7 +125,7 @@ for (i = 0; i < numLines; i++) {
 		line_in_percent = 0
 		percent++
 		if (percent % 10 === 0) {
-			process.stdout.write(percent + "%")
+			process.stdout.write(percent + "%\n")
 		} else {
 			process.stdout.write(".")
 		}

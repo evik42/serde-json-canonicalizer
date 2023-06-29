@@ -79,7 +79,7 @@ impl Ord for JsonProperty {
 type JsonObject = BTreeSet<JsonProperty>;
 
 #[derive(Default)]
-pub struct JcsFormatter {
+struct JcsFormatter {
     objects: Vec<JsonObject>,
     keys: Vec<Vec<u8>>,
     buffers: Vec<Vec<u8>>,
@@ -475,7 +475,7 @@ impl Formatter for JcsFormatter {
     }
 }
 
-pub struct JcsSerializer<W: io::Write> {
+struct JcsSerializer<W: io::Write> {
     serializer: Serializer<W, JcsFormatter>,
 }
 
@@ -486,12 +486,6 @@ impl<W: io::Write> JcsSerializer<W> {
         Self {
             serializer: Serializer::with_formatter(writer, JcsFormatter::default()),
         }
-    }
-
-    /// Unwrap the `Writer` from the `Serializer`.
-    #[inline]
-    pub fn into_inner(self) -> W {
-        self.serializer.into_inner()
     }
 }
 

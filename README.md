@@ -1,6 +1,5 @@
 [![Crates.io](https://img.shields.io/crates/v/serde_json_canonicalizer.svg)](https://crates.io/crates/serde_json_canonicalizer)
-
-[![Workflow Status](https://github.com/evik42/serde-json-canonicalizer/workflows/nightly/badge.svg)](https://github.com/evik42/serde-json-canonicalizer/actions?query=workflow%3A%22nightly%22)
+[![Workflow Status](https://github.com/evik42/serde-json-canonicalizer/actions/workflows/nightly.yml/badge.svg)](https://github.com/evik42/serde-json-canonicalizer/actions/workflows/nightly.yml)
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
 # serde_json_canonicalizer
