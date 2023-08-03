@@ -14,6 +14,53 @@ fn value_to_string_no_err<V: Serialize>(value: V) -> String {
     value_to_string(value).unwrap()
 }
 
+// This test is running on a generated file, the generator is copied from the reference implementation
+// https://github.com/cyberphone/json-canonicalization/blob/dc406ceaf94b5fa554fcabb92c091089c2357e83/testdata/numgen.js
+// To run the test, generate the input file (~3.7Gb) by executing the generation script
+// in `resources/generated-numbers` by the command `node numgen.js` (requires nodejs to be installed)
+// This is a long test and should be executed via
+// `cargo test --tests generated_numbers -- --nocapture --include-ignored`
+#[ignore]
+#[test]
+fn generated_numbers() {
+    use std::io::{stdout, BufRead, BufReader, Write};
+    let file =
+        std::fs::File::open("tests/resources/generated-numbers/es6testfile100m.txt").unwrap();
+    let reader = BufReader::new(file);
+
+    let one_percent = 1000000usize;
+    let mut threshold = one_percent - 1;
+    let mut percent = 0;
+    let mut stdout = stdout().lock();
+    let mut buffer: Vec<u8> = Vec::with_capacity(32);
+    for (idx, line) in reader.lines().enumerate() {
+        let line = line.unwrap();
+        let parts = line.split(',').collect::<Vec<_>>();
+        assert_eq!(2, parts.len());
+        let input = f64::from_bits(u64::from_str_radix(parts[0], 16).unwrap());
+        let output = to_vec(&input).unwrap();
+        assert_eq!(
+            parts[1].as_bytes(),
+            &output,
+            "Testing input {} parsed into {}",
+            parts[0],
+            input
+        );
+        buffer.clear();
+        if idx == threshold {
+            threshold += one_percent;
+            percent += 1;
+            if percent % 10 == 0 {
+                writeln!(stdout, "{percent}%").ok();
+            } else {
+                write!(stdout, ".").ok();
+            }
+            stdout.flush().ok();
+        }
+    }
+    writeln!(stdout).ok();
+}
+
 #[case(0x0000000000000000 => "0" ; "Zero")]
 #[case(0x8000000000000000 => "0" ; "Minus zero")]
 #[case(0x0000000000000001 => "5e-324" ; "Min pos number")]
@@ -144,51 +191,4 @@ fn integers_i128(number: i128) -> String {
 #[case(-0.0f64 => "0" ; "minus zero")]
 fn zeroes(number: f64) -> String {
     value_to_string_no_err(number)
-}
-
-// This test is running on a generated file, the generator is copied from the reference implementation
-// https://github.com/cyberphone/json-canonicalization/blob/dc406ceaf94b5fa554fcabb92c091089c2357e83/testdata/numgen.js
-// To run the test, generate the input file (~3.7Gb) by executing the generation script
-// in `resources/generated-numbers` by the command `node numgen.js` (requires nodejs to be installed)
-// This is a long test and should be executed via
-// `cargo test --tests generated_numbers -- --nocapture --include-ignored`
-#[ignore]
-#[test]
-fn generated_numbers() {
-    use std::io::{stdout, BufRead, BufReader, Write};
-    let file =
-        std::fs::File::open("tests/resources/generated-numbers/es6testfile100m.txt").unwrap();
-    let reader = BufReader::new(file);
-
-    let one_percent = 1000000usize;
-    let mut threshold = one_percent - 1;
-    let mut percent = 0;
-    let mut stdout = stdout().lock();
-    let mut buffer: Vec<u8> = Vec::with_capacity(32);
-    for (idx, line) in reader.lines().enumerate() {
-        let line = line.unwrap();
-        let parts = line.split(',').collect::<Vec<_>>();
-        assert_eq!(2, parts.len());
-        let input = f64::from_bits(u64::from_str_radix(parts[0], 16).unwrap());
-        let output = to_vec(&input).unwrap();
-        assert_eq!(
-            parts[1].as_bytes(),
-            &output,
-            "Testing input {} parsed into {}",
-            parts[0],
-            input
-        );
-        buffer.clear();
-        if idx == threshold {
-            threshold += one_percent;
-            percent += 1;
-            if percent % 10 == 0 {
-                writeln!(stdout, "{percent}%").ok();
-            } else {
-                write!(stdout, ".").ok();
-            }
-            stdout.flush().ok();
-        }
-    }
-    writeln!(stdout).ok();
 }

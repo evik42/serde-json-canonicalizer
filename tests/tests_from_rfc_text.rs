@@ -19,13 +19,6 @@ fn read_files(filename: &str) -> (Value, Vec<u8>) {
     (input, expected.into_bytes())
 }
 
-#[test_case("rfc_example" ; "rfc example in section 3.2.2")]
-#[test_case("rfc_sorting" ; "rfc sorting example in section 3.2.3")]
-fn files(filename: &str) {
-    let (input, expected) = read_files(filename);
-    assert_eq!(expected, to_vec(&input).unwrap());
-}
-
 #[test]
 fn example_to_utf8_vec() {
     let expected = "\
@@ -40,5 +33,12 @@ fn example_to_utf8_vec() {
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
     let (input, _) = read_files("rfc_example");
+    assert_eq!(expected, to_vec(&input).unwrap());
+}
+
+#[test_case("rfc_example" ; "rfc example in section 3.2.2")]
+#[test_case("rfc_sorting" ; "rfc sorting example in section 3.2.3")]
+fn files(filename: &str) {
+    let (input, expected) = read_files(filename);
     assert_eq!(expected, to_vec(&input).unwrap());
 }
