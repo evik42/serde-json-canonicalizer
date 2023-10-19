@@ -66,7 +66,7 @@ impl Eq for JsonProperty {}
 
 impl PartialOrd for JsonProperty {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.sorting_key.partial_cmp(&other.sorting_key)
+        Some(self.cmp(other))
     }
 }
 
