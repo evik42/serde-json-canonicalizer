@@ -6,14 +6,11 @@ on:
     # run this workflow every day at 1:42 AM UTC
     - cron: '42 1 * * *'
 
-env:
-  rust_stable: 1.68.2
-
 jobs:
   build:
     name: All tests
     env:
-      RUSTFLAGS: "-D warnings -C opt-level=z -C target-cpu=x86-64 -C debuginfo=1"
+      RUSTFLAGS: "-D warnings -C debuginfo=1"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -23,10 +20,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Rust ${{ env.rust_stable }}
+      - name: Install Rust stable
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ env.rust_stable }}
+          toolchain: stable
           components: rustfmt, clippy
 
       - name: Install node
