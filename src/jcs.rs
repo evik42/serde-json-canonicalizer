@@ -10,28 +10,6 @@ use serde_json::{
     ser::{CharEscape, Formatter, Serializer},
 };
 
-/// Serialize the given data structure as a JCS byte vector.
-///
-/// # Errors
-///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
-pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
-    let mut buffer = Vec::with_capacity(1024);
-    to_writer(value, &mut buffer).map(|_| buffer)
-}
-
-/// Serialize the given data structure as JCS into the I/O stream.
-/// Serialization guarantees it only feeds valid UTF-8 sequences to the writer.
-///
-/// # Errors
-///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
-pub fn to_writer<S: Serialize, W: io::Write>(value: &S, writer: &mut W) -> serde_json::Result<()> {
-    value.serialize(&mut JcsSerializer::new(writer))
-}
-
 struct JsonProperty {
     sorting_key: Vec<u16>,
     key: Vec<u8>,
@@ -78,8 +56,31 @@ impl Ord for JsonProperty {
 
 type JsonObject = BTreeSet<JsonProperty>;
 
+/// An RFC 8785 compatible JSON Canonicalization Scheme (JCS) formatter for [serde_json].
+///
+/// # Example
+/// ```
+/// use serde::Serialize;
+/// use serde_json::Serializer;
+/// use serde_json_canonicalizer::JcsFormatter;
+///
+/// #[derive(Serialize)]
+/// struct Data {
+///     c: isize,
+///     b: bool,
+///     a: String,
+/// }
+///
+/// let data = Data { c: 120, b: false, a: "Hello!".to_owned() };
+///
+/// let mut ser = Serializer::with_formatter(Vec::new(), JcsFormatter::default());
+/// data.serialize(&mut ser).unwrap();
+/// let result = ser.into_inner();
+///
+/// assert_eq!(&result, r#"{"a":"Hello!","b":false,"c":120}"#.as_bytes());
+/// ```
 #[derive(Default)]
-struct JcsFormatter {
+pub struct JcsFormatter {
     objects: Vec<JsonObject>,
     keys: Vec<Vec<u8>>,
     buffers: Vec<Vec<u8>>,
@@ -475,7 +476,30 @@ impl Formatter for JcsFormatter {
     }
 }
 
-struct JcsSerializer<W: io::Write> {
+/// An RFC 8785 compatible JSON Canonicalization Scheme (JCS) serializer for [serde_json].
+///
+/// # Example
+/// ```
+/// use serde::Serialize;
+/// use serde_json::Serializer;
+/// use serde_json_canonicalizer::JcsSerializer;
+///
+/// #[derive(Serialize)]
+/// struct Data {
+///     c: isize,
+///     b: bool,
+///     a: String,
+/// }
+///
+/// let data = Data { c: 120, b: false, a: "Hello!".to_owned() };
+///
+/// let mut ser = JcsSerializer::new(Vec::with_capacity(128));
+/// data.serialize(&mut ser).unwrap();
+/// let result = ser.into_inner();
+///
+/// assert_eq!(&result, r#"{"a":"Hello!","b":false,"c":120}"#.as_bytes());
+/// ```
+pub struct JcsSerializer<W: io::Write> {
     serializer: Serializer<W, JcsFormatter>,
 }
 
@@ -486,6 +510,12 @@ impl<W: io::Write> JcsSerializer<W> {
         Self {
             serializer: Serializer::with_formatter(writer, JcsFormatter::default()),
         }
+    }
+
+    /// Consumes this serializer returning the underlying writer.
+    #[inline]
+    pub fn into_inner(self) -> W {
+        self.serializer.into_inner()
     }
 }
 
