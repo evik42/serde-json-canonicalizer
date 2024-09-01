@@ -56,31 +56,12 @@ impl Ord for JsonProperty {
 
 type JsonObject = BTreeSet<JsonProperty>;
 
-/// An RFC 8785 compatible JSON Canonicalization Scheme (JCS) formatter for [serde_json].
+/// The formatter that's used by the [JcsSerializer].
 ///
-/// # Example
-/// ```
-/// use serde::Serialize;
-/// use serde_json::Serializer;
-/// use serde_json_canonicalizer::JcsFormatter;
-///
-/// #[derive(Serialize)]
-/// struct Data {
-///     c: isize,
-///     b: bool,
-///     a: String,
-/// }
-///
-/// let data = Data { c: 120, b: false, a: "Hello!".to_owned() };
-///
-/// let mut ser = Serializer::with_formatter(Vec::new(), JcsFormatter::default());
-/// data.serialize(&mut ser).unwrap();
-/// let result = ser.into_inner();
-///
-/// assert_eq!(&result, r#"{"a":"Hello!","b":false,"c":120}"#.as_bytes());
-/// ```
+/// This formatter is not fully RFC 8785 compliant in its own right, because the [JcsSerializer] is
+/// instead responsible for handling floating point NaN and infinity.
 #[derive(Default)]
-pub struct JcsFormatter {
+struct JcsFormatter {
     objects: Vec<JsonObject>,
     keys: Vec<Vec<u8>>,
     buffers: Vec<Vec<u8>>,
