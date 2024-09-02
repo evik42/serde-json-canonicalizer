@@ -2,7 +2,7 @@
 //!
 //! Intended to be drop-in replacements for the [serde_json] equivalents.
 
-use crate::JcsSerializer;
+use crate::jcs::JcsSerializer;
 use serde::Serialize;
 use std::io;
 
