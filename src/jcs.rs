@@ -458,28 +458,6 @@ impl Formatter for JcsFormatter {
 }
 
 /// An RFC 8785 compatible JSON Canonicalization Scheme (JCS) serializer for [serde_json].
-///
-/// # Example
-/// ```
-/// use serde::Serialize;
-/// use serde_json::Serializer;
-/// use serde_json_canonicalizer::JcsSerializer;
-///
-/// #[derive(Serialize)]
-/// struct Data {
-///     c: isize,
-///     b: bool,
-///     a: String,
-/// }
-///
-/// let data = Data { c: 120, b: false, a: "Hello!".to_owned() };
-///
-/// let mut ser = JcsSerializer::new(Vec::with_capacity(128));
-/// data.serialize(&mut ser).unwrap();
-/// let result = ser.into_inner();
-///
-/// assert_eq!(&result, r#"{"a":"Hello!","b":false,"c":120}"#.as_bytes());
-/// ```
 pub(crate) struct JcsSerializer<W: io::Write> {
     serializer: Serializer<W, JcsFormatter>,
 }
