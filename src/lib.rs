@@ -5,6 +5,4 @@ mod jcs;
 mod util;
 
 #[doc(inline)]
-pub use crate::jcs::*;
-#[doc(inline)]
 pub use crate::util::*;

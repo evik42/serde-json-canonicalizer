@@ -61,7 +61,7 @@ type JsonObject = BTreeSet<JsonProperty>;
 /// This formatter is not fully RFC 8785 compliant in its own right, because the [JcsSerializer] is
 /// instead responsible for handling floating point NaN and infinity.
 #[derive(Default)]
-struct JcsFormatter {
+pub(crate) struct JcsFormatter {
     objects: Vec<JsonObject>,
     keys: Vec<Vec<u8>>,
     buffers: Vec<Vec<u8>>,
@@ -480,7 +480,7 @@ impl Formatter for JcsFormatter {
 ///
 /// assert_eq!(&result, r#"{"a":"Hello!","b":false,"c":120}"#.as_bytes());
 /// ```
-pub struct JcsSerializer<W: io::Write> {
+pub(crate) struct JcsSerializer<W: io::Write> {
     serializer: Serializer<W, JcsFormatter>,
 }
 
@@ -495,6 +495,7 @@ impl<W: io::Write> JcsSerializer<W> {
 
     /// Consumes this serializer returning the underlying writer.
     #[inline]
+    #[allow(dead_code)]
     pub fn into_inner(self) -> W {
         self.serializer.into_inner()
     }
