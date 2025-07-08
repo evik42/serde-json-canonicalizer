@@ -228,7 +228,6 @@ impl Formatter for JcsFormatter {
         let number: f64 = value
             .parse()
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Cannot parse str to f64"))?;
-        self.get_writer(writer).write_all(b"ff")?;
         self.write_f64(writer, number)
     }
 
