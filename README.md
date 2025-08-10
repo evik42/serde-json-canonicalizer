@@ -30,6 +30,11 @@ assert_eq!(json_string, expected);
 assert_eq!(json_bytes, expected.as_bytes());
 ```
 
+## serde_json arbitrary precision feature
+
+`serde_json` supports writing arbitrary precision numbers into JSON which is not conforming to the RFC 8785. Those numbers can be reliably read back only by a deserializer that is prepared to read arbitrary precision numbers that are not available in JavaScript. The canonicalization method will convert these numbers into doubles and serialize them according to the rules of representing doubles. Thus the arbitrary precision is lost.
+To use numbers that are not represented as doubles, store them as strings in the JSON and rely on the consuming application to deserialize these strings accordingly. (For example storing hash values, signatures or other numbers that cannot be represented in double format.)
+
 ## License
 
 Licensed under MIT license ([LICENSE](LICENSE) or https://opensource.org/licenses/MIT)

@@ -192,3 +192,17 @@ fn integers_i128(number: i128) -> String {
 fn zeroes(number: f64) -> String {
     value_to_string_no_err(number)
 }
+
+// https://github.com/evik42/serde-json-canonicalizer/issues/5
+#[test]
+fn test_issue_5() {
+    let simple_input: &str = r#"{
+        "number": 300
+    }"#;
+
+    let f: serde_json::Value = serde_json::from_str(simple_input).unwrap();
+
+    let json_string = value_to_string(&f).unwrap();
+
+    assert_eq!(json_string, r#"{"number":300}"#);
+}
