@@ -8,43 +8,43 @@ on:
     branches:
       - main
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Tests
-    env:
-      RUSTFLAGS: "-D warnings -C debuginfo=1"
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       - name: Install Rust stable
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@1780873c7b576612439a134613cc4cc74ce5538c # v1.15.2
         with:
           toolchain: stable
           components: rustfmt, clippy
-
-      - name: Setup build cache
-        uses: Swatinem/rust-cache@v2
+          rustflags: "-D warnings -C debuginfo=1"
 
       - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets --all-features --workspace -- -D warnings
+        shell: bash
+        run: |
+          cargo clippy --all-targets --all-features --workspace -- -D warnings
 
       - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        uses: actions-rust-lang/rustfmt@559aa3035a47390ba96088dffa783b5d26da9326 # v1.1.1
 
       - name: Unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --workspace
+        shell: bash
+        run: |
+          cargo test --workspace
