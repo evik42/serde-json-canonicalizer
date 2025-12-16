@@ -1,0 +1,19 @@
+[package]
+name = "serde-json-canonicalizer-no-std-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libc = { version = "0.2.178", default-features = false }
+libc_alloc = { version = "1.0.7", features = [ "global" ] }
+serde_json_canonicalizer = { version = "0.3", default-features = false, features = [ "alloc" ] }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[patch.crates-io]
+serde_json = { path = "../../serde-json-patched" }
+serde_json_canonicalizer = { path = "../" }

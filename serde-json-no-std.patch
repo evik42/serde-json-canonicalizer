@@ -1,0 +1,51 @@
+diff --git a/src/io/core.rs b/src/io/core.rs
+index 54c8ddf..e8793e6 100644
+--- a/src/io/core.rs
++++ b/src/io/core.rs
+@@ -20,7 +20,7 @@ impl Display for Error {
+ }
+
+ impl Error {
+-    pub(crate) fn new(_kind: ErrorKind, _error: &'static str) -> Error {
++    pub fn new(_kind: ErrorKind, _error: &'static str) -> Error {
+         Error
+     }
+ }
+@@ -42,7 +42,7 @@ pub trait Write {
+     fn flush(&mut self) -> Result<()>;
+ }
+
+-impl<W: Write> Write for &mut W {
++impl<W: Write + ?Sized> Write for &mut W {
+     #[inline]
+     fn write(&mut self, buf: &[u8]) -> Result<usize> {
+         (*self).write(buf)
+diff --git a/src/lib.rs b/src/lib.rs
+index 9669d70..833db8a 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -364,7 +364,7 @@
+ // Restrictions
+ #![deny(clippy::question_mark_used)]
+ #![allow(non_upper_case_globals)]
+-#![deny(missing_docs)]
++// #![deny(missing_docs)]
+ #![no_std]
+ #![cfg_attr(docsrs, feature(doc_cfg))]
+ #![allow(unknown_lints, mismatched_lifetime_syntaxes)]
+@@ -422,14 +422,10 @@ mod macros;
+ pub mod de;
+ pub mod error;
+ pub mod map;
+-#[cfg(feature = "std")]
+-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
+ pub mod ser;
+-#[cfg(not(feature = "std"))]
+-mod ser;
+ pub mod value;
+
+-mod io;
++pub mod io;
+ #[cfg(feature = "std")]
+ mod iter;
+ #[cfg(feature = "float_roundtrip")]

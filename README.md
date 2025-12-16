@@ -2,6 +2,49 @@
 [![Workflow Status](https://github.com/evik42/serde-json-canonicalizer/actions/workflows/nightly.yml/badge.svg)](https://github.com/evik42/serde-json-canonicalizer/actions/workflows/nightly.yml)
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
+# no-std branch
+
+:warning: **This branch contains changes to make it work but are not officially supported**
+
+This branch contains changes that allow building the library in a no-std environment. **Read carefully!**
+
+Unfortunately [serde_json](https://crates.io/crates/serde_json) does not support implementing a custom Formatter in no-std environments because if seems that the `std` feature would not be additive to a no-std build. Details can be read on [serde_json PR #1122](https://github.com/serde-rs/json/pull/1122).
+
+If you are determined to use this library in a no-std environment you will need to do it without relying on official releases from crates.io.
+
+:warning: **Read this carefully**
+
+Keep in mind that the patched version of `serde_json` can work in a `std` or in `no-std` environment, but there will be failures if you try to use a `no-std` build of a library where `serde_json` has `std` feature enabled.
+The `no-std` branch of `serde_json_canonicalizer` **only builds with the patched version of serde_json**.
+
+## Steps to get a no-std library version
+
+1. Clone `serde_json`
+2. Optionally checkout the release tag in `serde_json` that matches the version on crates.io that you want to use, or roll with master
+3. Clone `serde_json_canonicalizer`
+4. Switch `serde_json_canonicalizer` to this `no-std` branch
+5. Apply the patch [serde-json-no-std.patch](serde-json-no-std.patch) to local copy of `serde_json`
+   `git apply {serde-json-canonicalizer path}/serde-json-no-std.patch`
+6. Use these local copies of the libraries to build your binary
+7. Add `serde_json_canonicalizer` dependency in your Cargo.toml where appropriate
+```
+serde_json_canonicalizer = { version = "0.3", default-features = false, features = [ "alloc" ] }
+```
+8. In your binary or library Cargo.toml you need to override the path to both `serde_json` and `serde_json_canonicalizer` via the `patch.crates-io` directive
+```
+[patch.crates-io]
+serde_json = { path = "/path/to/serde-json" }
+serde_json_canonicalizer = { path = "../path/to/serde-json-canonicalizer" }
+```
+
+**At this point you are the maintainer of the version of both serde_json and serde_json_canonicalizer that you are using**
+
+The beauty of free software.
+
+In the [no-std-binary](no-std-binary) folder there is a little hacked example how a project in no-std would look like using these libraries.
+
+**Normal README below**
+
 # serde_json_canonicalizer
 
 An RFC 8785 compatible JSON Canonicalization Scheme output for [serde_json](https://crates.io/crates/serde_json).

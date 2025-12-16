@@ -4,7 +4,12 @@
 
 use crate::jcs::JcsSerializer;
 use serde::Serialize;
-use std::io;
+use serde_json::io;
+
+use alloc::{
+    string::String,
+    vec::Vec,
+};
 
 /// Serialize the given data structure as a JCS byte vector.
 ///

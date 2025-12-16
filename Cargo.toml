@@ -9,9 +9,14 @@ documentation = "https://docs.rs/serde_json_canonicalizer/"
 
 [dependencies]
 ryu-js = "1.0.1"
-serde = "1.0"
-serde_json = { version = "1.0", features = [ "float_roundtrip" ] }
+serde = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", default-features = false, features = [ "float_roundtrip" ] }
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }  # for doctests
 test-case = "3.1.0"
+
+[features]
+default = [ "std" ]
+std = [ "serde_json/std", "serde/std" ]
+alloc = [ "serde_json/alloc", "serde/alloc" ]

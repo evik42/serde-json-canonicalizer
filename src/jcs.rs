@@ -1,12 +1,14 @@
-use std::{
+use alloc::{
+    boxed::Box,
     collections::BTreeSet,
     fmt::Display,
-    io::{self, Write},
+    vec::Vec,
 };
 
 use serde::{ser::Serializer as SerSerializer, Serialize};
 use serde_json::{
     error::Result,
+    io::self,
     ser::{CharEscape, Formatter, Serializer},
 };
 
@@ -20,10 +22,11 @@ impl JsonProperty {
     fn new(key: Vec<u8>, value: Vec<u8>) -> io::Result<Self> {
         // Go through deserialization again to process escape sequences in the key
         // "\\a" should be processed as '\a' for sorting
-        let sorting_key_as_value = serde_json::from_slice::<serde_json::Value>(&key)?;
+        let sorting_key_as_value = serde_json::from_slice::<serde_json::Value>(&key)
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Cannot parse key as JSON value"))?;
         let sorting_key: Vec<u16> = sorting_key_as_value
             .as_str()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Invalid UTF8 sequence"))?
+            .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "Invalid UTF8 sequence"))?
             .encode_utf16()
             .collect();
         Ok(Self {
@@ -43,13 +46,13 @@ impl PartialEq for JsonProperty {
 impl Eq for JsonProperty {}
 
 impl PartialOrd for JsonProperty {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for JsonProperty {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.sorting_key.cmp(&other.sorting_key)
     }
 }
@@ -212,7 +215,7 @@ impl Formatter for JcsFormatter {
             self.get_writer(writer).write_all(s.as_bytes())
         } else {
             Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
+                io::ErrorKind::Other,
                 "NaN and +/-Infinity are not permitted in JSON",
             ))
         }
@@ -227,7 +230,7 @@ impl Formatter for JcsFormatter {
     {
         let number: f64 = value
             .parse()
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Cannot parse str to f64"))?;
+            .map_err(|_| io::Error::new(io::ErrorKind::Other, "Cannot parse str to f64"))?;
         self.write_f64(writer, number)
     }
 
@@ -359,7 +362,7 @@ impl Formatter for JcsFormatter {
     {
         let json_object = self.objects.pop().ok_or_else(|| {
             io::Error::new(
-                io::ErrorKind::InvalidData,
+                io::ErrorKind::Other,
                 "end_object called before start_object",
             )
         })?;
@@ -397,7 +400,7 @@ impl Formatter for JcsFormatter {
     {
         let key = self.buffers.pop().ok_or_else(|| {
             io::Error::new(
-                io::ErrorKind::InvalidData,
+                io::ErrorKind::Other,
                 "end_object_key called before begin_object_key",
             )
         })?;
@@ -423,19 +426,19 @@ impl Formatter for JcsFormatter {
     {
         let value = self.buffers.pop().ok_or_else(|| {
             io::Error::new(
-                io::ErrorKind::InvalidData,
+                io::ErrorKind::Other,
                 "end_object_value called before begin_object_value",
             )
         })?;
         let key = self.keys.pop().ok_or_else(|| {
             io::Error::new(
-                io::ErrorKind::InvalidData,
+                io::ErrorKind::Other,
                 "end_object_value called before end_object_key",
             )
         })?;
         let json_object = self.objects.last_mut().ok_or_else(|| {
             io::Error::new(
-                io::ErrorKind::InvalidData,
+                io::ErrorKind::Other,
                 "end_object_value called before start_object",
             )
         })?;
@@ -450,7 +453,7 @@ impl Formatter for JcsFormatter {
         W: ?Sized + io::Write,
     {
         Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
+            io::ErrorKind::Other,
             "Raw values are not supported for JCS serialization",
         ))
     }
@@ -552,7 +555,7 @@ impl<'a, W: io::Write> SerSerializer for &'a mut JcsSerializer<W> {
             self.serializer.serialize_f32(value)
         } else {
             Err(Self::Error::io(io::Error::new(
-                io::ErrorKind::InvalidInput,
+                io::ErrorKind::Other,
                 "NaN and +/-Infinity are not permitted in JSON",
             )))
         }
@@ -564,7 +567,7 @@ impl<'a, W: io::Write> SerSerializer for &'a mut JcsSerializer<W> {
             self.serializer.serialize_f64(value)
         } else {
             Err(Self::Error::io(io::Error::new(
-                io::ErrorKind::InvalidInput,
+                io::ErrorKind::Other,
                 "NaN and +/-Infinity are not permitted in JSON",
             )))
         }
