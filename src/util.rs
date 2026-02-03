@@ -12,8 +12,8 @@ use std::io;
 ///
 /// # Errors
 ///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
+/// Serialization can fail if `S`'s implementation of `Serialize` decides to
+/// fail, or if `S` contains a map with non-string keys.
 pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
     // copying the serde_json::to_vec buffer size
     let mut buffer = Vec::with_capacity(128);
@@ -26,15 +26,13 @@ pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
 ///
 /// # Errors
 ///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
+/// Serialization can fail if `S`'s implementation of `Serialize` decides to
+/// fail, or if `S` contains a map with non-string keys.
 pub fn to_string<S: Serialize>(value: &S) -> serde_json::Result<String> {
-    let vec = to_vec(value)?;
-    let string = unsafe {
+    to_vec(value).map(|vec| unsafe {
         // We do not emit invalid UTF-8.
         String::from_utf8_unchecked(vec)
-    };
-    Ok(string)
+    })
 }
 
 /// Serialize the given data structure as JCS into the I/O stream.
@@ -44,8 +42,8 @@ pub fn to_string<S: Serialize>(value: &S) -> serde_json::Result<String> {
 ///
 /// # Errors
 ///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
+/// Serialization can fail if `S`'s implementation of `Serialize` decides to
+/// fail, or if `S` contains a map with non-string keys.
 pub fn to_writer<S: Serialize, W: io::Write>(value: &S, writer: &mut W) -> serde_json::Result<()> {
     value.serialize(&mut JcsSerializer::new(writer))
 }
@@ -67,11 +65,7 @@ pub fn to_writer<S: Serialize, W: io::Write>(value: &S, writer: &mut W) -> serde
 ///
 /// Deserialization uses [serde_json::from_str] directly, some failure cases include if numbers are
 /// out of range, unicode lone surrogates, or other malformed JSON.
-///
-/// Serialization can fail if `T`'s implementation of `Serialize` decides to
-/// fail, or if `T` contains a map with non-string keys.
 pub fn pipe(json: &str) -> serde_json::Result<String> {
     let value: serde_json::Value = serde_json::from_str(json)?;
-    let jcs = to_string(&value)?;
-    Ok(jcs)
+    to_string(&value)
 }
