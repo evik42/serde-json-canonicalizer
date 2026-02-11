@@ -8,6 +8,8 @@ An RFC 8785 compatible JSON Canonicalization Scheme output for [serde_json](http
 
 JSON Canonicalization Scheme [RFC-8785](https://datatracker.ietf.org/doc/html/rfc8785) defines a JSON serialization scheme to allow using JSON data in cryptographic operations that rely on byte level reproduction of data. It can be used instead of storing the serialized format as a BASE64 encoded string or similar packaging, allowing easier handling of JSON formatted data that can be canonicalized before feeding it to a cryptographic function.
 
+You can learn the high level concepts of JCS and find implementations in other languages in the [JCS repository](https://github.com/cyberphone/json-canonicalization).
+
 ## Usage
 ```rust
 use serde_json_canonicalizer::{to_string, to_vec};
