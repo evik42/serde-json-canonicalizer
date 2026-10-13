@@ -439,8 +439,15 @@ impl Formatter for JcsFormatter {
                 "end_object_value called before start_object",
             )
         })?;
-        json_object.insert(JsonProperty::new(key, value)?);
-        Ok(())
+        let new_property: bool = json_object.insert(JsonProperty::new(key, value)?);
+        if !new_property {
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "duplicate object key",
+            ))
+        } else {
+            Ok(())
+        }
     }
 
     /// Raw fragments are not supported because it cannot be verified that they conform to JCS without modifying them
