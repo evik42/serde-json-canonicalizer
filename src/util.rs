@@ -13,7 +13,7 @@ use std::io;
 /// # Errors
 ///
 /// Serialization can fail if `S`'s implementation of `Serialize` decides to
-/// fail, or if `S` contains a map with non-string keys.
+/// fail, or if `S` contains a map with non-string keys or duplicate keys.
 pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
     // copying the serde_json::to_vec buffer size
     let mut buffer = Vec::with_capacity(128);
@@ -27,7 +27,7 @@ pub fn to_vec<S: Serialize>(value: &S) -> serde_json::Result<Vec<u8>> {
 /// # Errors
 ///
 /// Serialization can fail if `S`'s implementation of `Serialize` decides to
-/// fail, or if `S` contains a map with non-string keys.
+/// fail, or if `S` contains a map with non-string keys or duplicate keys.
 pub fn to_string<S: Serialize>(value: &S) -> serde_json::Result<String> {
     to_vec(value).map(|vec| unsafe {
         // We do not emit invalid UTF-8.
@@ -43,12 +43,18 @@ pub fn to_string<S: Serialize>(value: &S) -> serde_json::Result<String> {
 /// # Errors
 ///
 /// Serialization can fail if `S`'s implementation of `Serialize` decides to
-/// fail, or if `S` contains a map with non-string keys.
+/// fail, or if `S` contains a map with non-string keys or duplicate keys.
 pub fn to_writer<S: Serialize, W: io::Write>(value: &S, writer: &mut W) -> serde_json::Result<()> {
     value.serialize(&mut JcsSerializer::new(writer))
 }
 
 /// Pipe a JSON formatted string into a JCS formatted string.
+///
+/// <div class="warning">pipe is a convenience function and relies on the caller making sure that the
+/// JSON passed in conforms to the I-JSON standard. Duplicate object keys and other discrepancies to the
+/// standard might be silently handled by serde_json::from_str.
+/// If the output does not match expectations, use serde_json::from_str (or other deserialization method),
+/// verify the data and call to_string with the deserialized value.</div>
 ///
 /// # Usage
 /// ```

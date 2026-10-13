@@ -39,7 +39,7 @@ To use numbers that are not represented as doubles, store them as strings in the
 
 ## License
 
-Licensed under MIT license ([LICENSE](LICENSE) or https://opensource.org/licenses/MIT)
+Licensed under MIT license ([LICENSE](LICENSE) or <https://opensource.org/licenses/MIT>)
 
 ### Contribution
 
